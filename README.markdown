@@ -9,8 +9,10 @@ Server
 
 Requires Ruby and Sinatra.
 
-`gem install sinatra`
-`ruby server.rb`
+```
+gem install sinatra
+ruby server.rb
+```
 
 Configuration
 -------------
