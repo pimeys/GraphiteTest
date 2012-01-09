@@ -1,0 +1,3 @@
+username: graphite_username
+password: graphite_password
+url: the graphite url which responds json

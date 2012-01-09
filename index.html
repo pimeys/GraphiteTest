@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>Graphite</title>
+    <script type="text/javascript" src="./lib/flot/jquery.js"></script>
+    <script type="text/javascript" src="./lib/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="./lib/flot/jquery.flot.crosshair.js"></script>
+  </head>
+  <body>
+    <div id="placeholder" style="width:1024px;height:768px;"></div>
+    <p id="hoverdata"></p>
+    <div id="legendsDiv"></div>
+  </body>
+  <script type="text/javascript">
+    var plot;
+    $(function() {
+      $.ajax({
+        url: '/data',
+        type: 'get',
+        dataType: 'json',
+        cache: false,
+        success: function(data) {
+          var cpus = [];
+
+          for (var i = 0; i < data.length; i++) {
+            var series = data[i].datapoints;
+            cpus.push([]);
+            for (var j = 0; j < series.length; j++) {
+              var point = series[j];
+              cpus[i].push([new Date(point[1] * 1000), point[0]]);
+            }
+          }
+
+          plot = $.plot($("#placeholder"), 
+          [{data: cpus[0], label: "CPU0 = "}, 
+           {data: cpus[1], label: "CPU1 = "}, 
+           {data: cpus[2], label: "CPU2 = "}, 
+           {data: cpus[3], label: "CPU3 = "}, 
+           {data: cpus[4], label: "CPU4 = "}], { 
+            series: { lines: { show: true } }, 
+            crosshair: { mode: "x" }, 
+            grid: { hoverable: true, autoHighlight: true },
+            yaxis: { min: 0.0, max: 30.0 },
+            legend: { container: $("#legendsDiv")}
+          });
+
+        }
+      });
+
+      var updateLegendTimeout = null;
+      var latestPosition = null;
+
+      $("#placeholder").bind("plothover",  function (event, pos, item) {
+        latestPosition = pos;
+        if (!updateLegendTimeout) {
+          updateLegendTimeout = setTimeout(updateLegend, 50);
+        }
+      });
+
+      function updateLegend() {
+        updateLegendTimeout = null;
+
+        var pos = latestPosition;
+
+        var axes = plot.getAxes();
+        if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max ||
+          pos.y < axes.yaxis.min || pos.y > axes.yaxis.max)
+          return;
+
+        var i, j, dataset = plot.getData();
+
+        for (i = 0; i < dataset.length; ++i) {
+          var series = dataset[i];
+
+          // find the nearest points, x-wise
+          for (j = 0; j < series.data.length; ++j) {
+            if (series.data[j][0] > pos.x) {
+              break;
+            }
+          }
+
+          // now interpolate
+          var y, p1 = series.data[j - 1], p2 = series.data[j];
+          if (p1 == null) {
+            y = p2[1];
+          }
+          else if (p2 == null) {
+            y = p1[1];
+          }
+          else {
+            y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
+          }
+          var x = p1[0];
+
+          var legends = $('#legendsDiv .legendLabel');
+          legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2) + " (" + x + ")"));
+        }
+      }
+    });
+  </script>
+</html>
