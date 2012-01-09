@@ -26,7 +26,7 @@
             cpus.push([]);
             for (var j = 0; j < series.length; j++) {
               var point = series[j];
-              cpus[i].push([new Date(point[1] * 1000), point[0]]);
+              cpus[i].push([point[1] * 1000, point[0]]);
             }
           }
 
@@ -39,7 +39,8 @@
             series: { lines: { show: true } }, 
             crosshair: { mode: "x" }, 
             grid: { hoverable: true, autoHighlight: true },
-            yaxis: { min: 0.0, max: 30.0 },
+            yaxis: { min: 0.0, max: 100.0 },
+            xaxis: { mode: "time", timeformat: "%h:%M" },
             legend: { container: $("#legendsDiv")}
           });
 
@@ -89,10 +90,10 @@
           else {
             y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
           }
-          var x = p1[0];
+          var x = new Date(p1[0]);
 
           var legends = $('#legendsDiv .legendLabel');
-          legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2) + " (" + x + ")"));
+          legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2) + " (" + x.toUTCString() + ")"));
         }
       }
     });
